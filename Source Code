@@ -1,0 +1,110 @@
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
+
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
+
+import os
+for dirname, _, filenames in os.walk(r'C:\Users\Dell\OneDrive\Desktop\Data Set'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+from sklearn.metrics import classification_report
+import re
+import string
+
+
+
+
+df0 = pd.read_csv(r'C:\Users\Dell\OneDrive\Desktop\Data Set\Fake.csv')
+df1 = pd.read_csv(r'C:\Users\Dell\OneDrive\Desktop\Data Set\True.csv')
+
+df0.head()
+
+df1.head()
+
+df0["status"] = 0
+df1["status"] = 1
+
+df0.shape
+
+df1.shape
+
+merging the columns
+
+df_merge = pd.concat([df0, df1], axis =0 )
+df_merge.head(10)
+
+df_merge.columns
+
+Cleaning data
+
+df = df_merge.drop(["title", "subject","date"], axis = 1)
+
+df.isnull().sum()
+
+df = df.sample(frac = 1)
+
+df.reset_index(inplace = True)
+df.drop(["index"], axis = 1, inplace = True)
+
+df.columns
+
+df.head()
+
+def wp(text):
+    text = text.lower()
+    text = re.sub('\[.*?\]', '', text)
+    text = re.sub("\\W"," ",text) 
+    text = re.sub('https?://\S+|www\.\S+', '', text)
+    text = re.sub('<.*?>+', '', text)
+    text = re.sub('[%s]' % re.escape(string.punctuation), '', text)
+    text = re.sub('\n', '', text)
+    text = re.sub('\w*\d\w*', '', text)    
+    return text
+
+df["text"] = df["text"].apply(wp)
+
+x = df["text"]
+y = df["status"]
+
+Train test split
+
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.25,random_state=42)
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+vectorization = TfidfVectorizer()
+xv_train = vectorization.fit_transform(x_train)
+xv_test = vectorization.transform(x_test)
+
+Applying LogisticRegression
+
+from sklearn.linear_model import LogisticRegression
+
+lr = LogisticRegression()
+lr.fit(xv_train,y_train)
+
+pred_lr=lr.predict(xv_test)
+
+print(classification_report(y_test, pred_lr))
+
+Accuracy score : 98%
+
+accuracy_score(y_test, pred_lr)
+
+sns.barplot(x= y_test, y=pred_lr)
+
+
+
